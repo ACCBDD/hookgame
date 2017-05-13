@@ -28,7 +28,7 @@ public class Abilities : MonoBehaviour {
 	private float retracting;
   private float forceRadius = 1;
   private float forceLiftPower = 100;
-  private float forcePushPower = 450;
+  //private float forcePushPower = 450;
   private float coneAngle = 40;
   private RaycastHit blockedBy;
 
@@ -37,18 +37,19 @@ public class Abilities : MonoBehaviour {
 		rb = GetComponent<Rigidbody>();
     powerRenderer = child.GetComponent<LineRenderer>();
 
-    powerRenderer.SetWidth(0.01f, forceRadius);
+    powerRenderer.startWidth = 0.01f;
+    powerRenderer.endWidth = forceRadius;
     powerRenderer.material = powerMaterial;
-    powerRenderer.SetVertexCount(1);
+    powerRenderer.numPositions = 1;
 
     lineRendererPoints.Add(transform.position);
-    lr.SetVertexCount(1);
+    lr.numPositions = 1;
 		grappleGravity = Physics.gravity * rb.mass;
   }
 
-  void OnDrawGizmosSelected() {
-    //Gizmos.DrawSphere(lastPoint, 1);
-  }
+  /*void OnDrawGizmosSelected() {
+    Gizmos.DrawSphere(lastPoint, 1);
+  }*/
 
 	private void AddTensionDueToGravity() {
 		float num = Vector3.Dot(grappleGravity, directionToGrapple);
@@ -75,17 +76,19 @@ public class Abilities : MonoBehaviour {
 
 	void Update () {
     if (Input.GetKeyDown("mouse 1")) {
-      powerRenderer.SetVertexCount(2);
+      powerRenderer.numPositions = 2;
       forceLiftPower = 100;
       forceRadius = 1;
-      powerRenderer.SetWidth(1, forceRadius);
+      powerRenderer.startWidth = 1;
+      powerRenderer.endWidth = forceRadius;
     }
 
     if (Input.GetKey("mouse 1")) {
       powerRenderer.SetPosition(0, transform.position + new Vector3(0, 0, -0f));
       forceRadius += Time.deltaTime * (12 - Mathf.Sqrt(forceRadius) * 2.5f);
       forceLiftPower = forceRadius * 100;
-      powerRenderer.SetWidth(1, forceRadius);
+      powerRenderer.startWidth = 1;
+      powerRenderer.endWidth = forceRadius;
       powerRenderer.SetPosition(1, transform.position + (MousePointInWorld() - transform.position).normalized * forceRadius + new Vector3(0, 0, -0f));
     }
     //force lift
@@ -98,7 +101,7 @@ public class Abilities : MonoBehaviour {
           hit.GetComponent<Rigidbody>().AddExplosionForce(forceLiftPower, transform.position, forceRadius, 2f);
 				}
 			}
-      powerRenderer.SetVertexCount(1);
+      powerRenderer.numPositions = 1;
 		}
 
 		//force push
@@ -115,27 +118,27 @@ public class Abilities : MonoBehaviour {
 
 				}
 			}
-      powerRenderer.SetVertexCount(1);
+      powerRenderer.numPositions = 1;
 		}*/
 
     //grappling hook
 		if (Input.GetKey("mouse 0") && !grappleDeployed) {
 			rb.useGravity = true;
 			grappleDeployed = false;
-			lr.SetColors(Color.white, Color.white);
+      lr.material.color = Color.white;
 			if (RaycastToMouse().collider != null) {
         aimPoint = RaycastToMouse().point;
-				lr.SetVertexCount(2);
+				lr.numPositions = 2;
 				lr.SetPosition(1, aimPoint);
 				targetFound = true;
 			} else {
-				lr.SetVertexCount(1);
+				lr.numPositions = 1;
 				targetFound = false;
 			}
 		}
 
     if (Input.GetKeyUp("mouse 0")) {
-			lr.SetColors(Color.black, Color.black);
+			lr.material.color = Color.black;
 			if (targetFound) {
 				contactPoint = aimPoint;
         lineRendererPoints.Add(contactPoint);
@@ -145,7 +148,7 @@ public class Abilities : MonoBehaviour {
 				ropeLength = Vector3.Distance(transform.position, contactPoint);
 			} else {
 				grappleDeployed = false;
-				lr.SetVertexCount(1);
+				lr.numPositions = 1;
         lineRendererPoints.Clear();
         lineRendererPoints.Add(transform.position);
 				targetFound = false;
@@ -205,7 +208,7 @@ public class Abilities : MonoBehaviour {
           }
           ropeLength = (contactPoint - transform.position).magnitude;
         }
-        lr.SetVertexCount(lineRendererPoints.Count);
+        lr.numPositions = lineRendererPoints.Count;
         lr.SetPositions(lineRendererPoints.ToArray());
       }
 
@@ -217,7 +220,7 @@ public class Abilities : MonoBehaviour {
         contactPoint = blockedBy.point;
         ropeLength = (contactPoint - transform.position).magnitude;
         lineRendererPoints.Insert(1, contactPoint);
-        lr.SetVertexCount(lineRendererPoints.Count);
+        lr.numPositions = lineRendererPoints.Count;
         lr.SetPositions(lineRendererPoints.ToArray());
       }
 		}

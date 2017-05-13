@@ -3,6 +3,7 @@
 public class PlayerMove : MonoBehaviour {
 
 	public float speed = 50;
+	public float rotateForce;
 	private float jumpForce = 200;
 	private float distToGround;
 	private float maxSpeed = 5;
@@ -42,6 +43,11 @@ public class PlayerMove : MonoBehaviour {
 		if (!canWalk) {
 			if (!IsGrounded())
 				rb.AddForce(new Vector3(Input.GetAxis("Horizontal") * airSpeed, 0, 0), ForceMode.Force);
+				if (Input.GetKey(KeyCode.Q)) {
+					rb.AddTorque(new Vector3(0, 0, 1) * rotateForce);
+				} else if (Input.GetKey(KeyCode.E)) {
+					rb.AddTorque(new Vector3(0, 0, 1) * -1 * rotateForce);
+				}
 		} else {
 			transform.rotation = Quaternion.identity;
 			if (!IsGrounded()) {
