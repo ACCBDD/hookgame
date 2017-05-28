@@ -8,15 +8,18 @@ public class Abilities : MonoBehaviour {
 
   public GameObject child;
 
+  public Vector3 angVel;
+
 	private bool targetFound = false;
 	private bool grappleDeployed = false;
+  private bool invalidTarget = false;
 	private Vector3 grappleGravity;
 	private Vector3 directionToGrapple;
 	private Vector3 contactPoint;
   private Vector3 lastPoint;
   private Vector3 aimPoint;
   private List<Vector3> lineRendererPoints = new List<Vector3>(2);
-  public LayerMask layerMask;
+  private LayerMask layerMask;
 	private float grapplePayoutSpeed = 2;
 	private float grappleRetractSpeed = 4;
 	private float ropeLength;
@@ -27,6 +30,8 @@ public class Abilities : MonoBehaviour {
   void Start () {
 		lr = GetComponent<LineRenderer>();
 		rb = GetComponent<Rigidbody>();
+
+    layerMask = (1 << 9) | (1 << 11);
 
     lineRendererPoints.Add(transform.position);
     lr.positionCount = 1;
@@ -62,6 +67,8 @@ public class Abilities : MonoBehaviour {
 
 	void Update () {
 
+    angVel = rb.angularVelocity;
+
     //grappling hook
 		if (Input.GetKey("mouse 0") && !grappleDeployed) {
 			rb.useGravity = true;
@@ -72,6 +79,12 @@ public class Abilities : MonoBehaviour {
 				lr.positionCount = 2;
 				lr.SetPosition(1, aimPoint);
 				targetFound = true;
+        if (RaycastToMouse().collider.gameObject.layer == 11) {
+          invalidTarget = true;
+          lr.material.color = Color.red;
+        } else {
+          invalidTarget = false;
+        }
 			} else {
 				lr.positionCount = 1;
 				targetFound = false;
@@ -80,7 +93,7 @@ public class Abilities : MonoBehaviour {
 
     if (Input.GetKeyUp("mouse 0")) {
 			lr.material.color = Color.black;
-			if (targetFound) {
+			if (targetFound && !invalidTarget) {
 				contactPoint = aimPoint;
         lineRendererPoints.Add(contactPoint);
 				rb.useGravity = false;
@@ -102,6 +115,7 @@ public class Abilities : MonoBehaviour {
 			directionToGrapple = (contactPoint - transform.position).normalized;
 			distanceToGrapple = (contactPoint - transform.position).magnitude;
 			num7 = Vector3.Dot(rb.velocity, directionToGrapple);
+      rb.AddTorque(new Vector3(0, 0, 1) * Vector3.Cross(rb.velocity, directionToGrapple).z * Time.deltaTime);
 
 			float retracting = 0;
 			if (Input.GetKey("w")) {
@@ -164,6 +178,15 @@ public class Abilities : MonoBehaviour {
         lr.positionCount = lineRendererPoints.Count;
         lr.SetPositions(lineRendererPoints.ToArray());
       }
+
+      if (Input.GetKeyDown(KeyCode.Space)) {
+        grappleDeployed = false;
+				lr.positionCount = 1;
+        lineRendererPoints.Clear();
+        lineRendererPoints.Add(transform.position);
+				targetFound = false;
+				rb.useGravity = true;
+  		}
 		}
 		lr.SetPosition(0, transform.position);
     lineRendererPoints[0] = transform.position;

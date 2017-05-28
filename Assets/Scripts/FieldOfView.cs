@@ -69,8 +69,9 @@ public class FieldOfView : MonoBehaviour {
 
 		vertices [0] = Vector3.zero;
 		for (int i = 0; i < vertexCount-1; i++) {
-			if (debugLines)
+			if (debugLines) {
 				Debug.DrawLine(transform.position, viewPoints[i]);
+			}
 			vertices[i + 1] = transform.InverseTransformPoint(viewPoints[i]) + (transform.InverseTransformPoint(viewPoints[i]) - transform.position).normalized * maskCutawayDist;
 
 			if (i < vertexCount - 2) {

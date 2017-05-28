@@ -17,6 +17,7 @@ public class PlayerMove : MonoBehaviour {
 
 	private bool canWalk;
 	private bool temp1;
+	private bool airJumped;
 
 	void Start () {
 		rb = GetComponent<Rigidbody>();
@@ -35,8 +36,9 @@ public class PlayerMove : MonoBehaviour {
 
 	void Update () {
 		//add force to move player
-		if (Mathf.Abs(rb.velocity.x) < maxSpeed && canWalk) {
+		if (canWalk) {
 			rb.AddForce(new Vector3(Input.GetAxis("Horizontal") * speed, 0, 0), ForceMode.Force);
+			rb.velocity = new Vector3(Mathf.Clamp(rb.velocity.x, -maxSpeed, maxSpeed), rb.velocity.y, rb.velocity.z);
 		}
 
 		//if in air, use airSpeed, not speed
@@ -44,9 +46,9 @@ public class PlayerMove : MonoBehaviour {
 			if (!IsGrounded())
 				rb.AddForce(new Vector3(Input.GetAxis("Horizontal") * airSpeed, 0, 0), ForceMode.Force);
 				if (Input.GetKey(KeyCode.Q)) {
-					rb.AddTorque(new Vector3(0, 0, 1) * rotateForce);
+					rb.AddTorque(new Vector3(0, 0, 1) * rotateForce * Time.deltaTime);
 				} else if (Input.GetKey(KeyCode.E)) {
-					rb.AddTorque(new Vector3(0, 0, 1) * -1 * rotateForce);
+					rb.AddTorque(new Vector3(0, 0, 1) * -1 * rotateForce * Time.deltaTime);
 				}
 		} else {
 			transform.rotation = Quaternion.identity;
@@ -60,10 +62,16 @@ public class PlayerMove : MonoBehaviour {
 			transform.position = new Vector3(transform.position.x, groundedPoint.y + distToGround, transform.position.z);
 			transform.rotation = Quaternion.identity;
 			canWalk = true;
+			airJumped = false;
 		}
 
-		if (Input.GetKeyDown(KeyCode.Space) && IsGrounded()) {
-			rb.AddForce(Vector3.up * jumpForce);
+		if (Input.GetKeyDown(KeyCode.Space)) {
+			if (IsGrounded()) {
+				rb.AddForce(Vector3.up * jumpForce);
+			} else if (!airJumped) {
+				rb.AddForce(Vector3.up * (jumpForce / 1.5f));
+				airJumped = true;
+			}
 		}
 	}
 }
